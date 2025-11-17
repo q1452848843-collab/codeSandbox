@@ -164,7 +164,7 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
 
         CreateContainerCmd containerCmd = dockerClient.createContainerCmd(image);
         HostConfig hostConfig = new HostConfig();
-        hostConfig.withMemory(100 * 1000 * 1000L);
+        hostConfig.withMemory(100 * 1000 * 1000L); //100M
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
 //        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
