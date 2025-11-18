@@ -67,8 +67,8 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
         JavaDockeCodeSandbox javaNativeCodeSandbox = new JavaDockeCodeSandbox();
         ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
 //测试运行
-//        executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3","11 13"));
-        executeCodeRequest.setInputList(Arrays.asList("1 2"));
+        executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3","11 13"));
+//        executeCodeRequest.setInputList(Arrays.asList("1 2"));
         String code = ResourceUtil.readStr("simpleComputeArgs/Main.java", StandardCharsets.UTF_8);
 //        String code = ResourceUtil.readStr("testCode/unsafeCode/RunFileError.java", StandardCharsets.UTF_8);
 //        String code = ResourceUtil.readStr("testCode/simpleCompute/Main.java", StandardCharsets.UTF_8);
@@ -204,12 +204,13 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
             System.out.println("创建执行命令：" + execCreateCmdResponse);
 
             ExecuteMessage executeMessage = new ExecuteMessage();
-            final String[] message = {"success"};
+            String[] message = {"success"};
             final String[] errorMessage = {null};
             long time = 0L;
             // 判断是否超时
             final boolean[] timeout = {true};
             String execId = execCreateCmdResponse.getId();
+
             ExecStartResultCallback execStartResultCallback = new ExecStartResultCallback() {
                 @Override
                 public void onComplete() {
@@ -227,6 +228,7 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
                     } else {
                         message[0] = new String(frame.getPayload());
                         System.out.println("输出结果：" + message[0]);
+                        System.out.println(message[0]);
                     }
                     super.onNext(frame);
                 }
@@ -269,7 +271,7 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
                 stopWatch.start();
                 dockerClient.execStartCmd(execId)
                         .exec(execStartResultCallback)
-                        .awaitCompletion(TIME_OUT, TimeUnit.MICROSECONDS);
+                        .awaitCompletion(5, TimeUnit.SECONDS);
                 stopWatch.stop();
                 time = stopWatch.getLastTaskTimeMillis();
                 statsCmd.close();
@@ -278,6 +280,7 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
                 throw new RuntimeException(e);
             }
             executeMessage.setMessage(message[0]);
+            System.out.println(executeMessage.getMessage());
             executeMessage.setErrorMessage(errorMessage[0]);
             executeMessage.setTime(time);
             executeMessage.setMemory(maxMemory[0]);
@@ -290,7 +293,7 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
         long maxTime = 0;
         for (ExecuteMessage executeMessage : executeMessageList) {
             String errorMessage = executeMessage.getErrorMessage();
-            if (StrUtil.isNotBlank(errorMessage)) {
+            if (StrUtil.isNotBlank(errorMessage)) { /// 如果用报错信息直接报错
                 executeCodeResponse.setMessage(errorMessage);
                 // 用户提交的代码执行中存在错误
                 executeCodeResponse.setStatus(3);
@@ -319,13 +322,16 @@ public class JavaDockeCodeSandbox implements CodeSandbox {
             boolean del = FileUtil.del(userCodeParentPath);
             System.out.println("删除" + (del ? "成功" : "失败"));
         }
+        System.out.println("-------------");
+        System.out.println("-------------");
         System.out.println(executeCodeResponse);
+        System.out.println("-------------");
+        System.out.println("-------------");
         return executeCodeResponse;
     }
 
     /**
      * 获取错误响应
-     *
      * @param e
      * @return
      */
